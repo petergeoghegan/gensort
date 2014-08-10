@@ -1,0 +1,22 @@
+# Make.win - makefile for compiling gensort/valsort with Visual Studio Tools.
+#
+# To use this makefile, open a Visual Studio command prompt with an x86
+# environment (x64 will not work due to zlib dependence) and use the 
+# following:
+#     nmake -f Make.win [target]
+#
+CFLAGS=/nologo /Zi /MTd
+
+all: gensort.exe valsort.exe
+
+gensort.exe: gensort.c rand16.obj rand16.h sump.obj
+	cl /O2 $(CFLAGS) -DSUMP_PUMP /Izlib\include gensort.c rand16.obj sump.obj zdll.lib
+
+valsort.exe: valsort.c rand16.obj rand16.h sump.obj
+	cl /O2 $(CFLAGS) -DSUMP_PUMP /Izlib\include valsort.c rand16.obj sump.obj zdll.lib
+
+sump.obj: sump.c sump.h
+	cl -c $(CFLAGS) -DSUMP_PUMP_NO_SORT sump.c
+
+rand16.obj: rand16.c rand16.h
+	cl -c $(CFLAGS) /O2 rand16.c
