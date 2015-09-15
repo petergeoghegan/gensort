@@ -47,6 +47,17 @@ Directions
       you need to make sure the zlib1.dll file is either in the same
       directory or in a directory Windows will search for x86 dll's.
 
-To extract COPY-able columns:
+Extracting PostgreSQL COPY-able columns on Linux
+------------------------------------------------
 
-cat penny | sed 's/./\t/11' | cut --complement -c12-46 | sed 's/\\/\\\\/g' > copy-penny
+This escapes to make input copy safe, does not store ordinal number column, and
+stores payload data as bytea, since it's clearly supposed to be binary data:
+
+cat pennytest | sed 's/\\/\\\\/g' | sed -E 's/[[:space:]]+[0-9A-F]+[[:space:]][^$]/\t\\\\x/g' > copy.input
+
+Then:
+
+postgres=# create table test (a text , b bytea);
+CREATE TABLE
+postgres=# copy test from '/home/pg/gensort/copy.input';
+COPY 100
