@@ -89,7 +89,7 @@ def main(nthreads, skew, logged, ntuples):
         trans_sql += "copy " + table + " from '" + filename + "' with freeze;\n"
         iteration += 1
 
-    trans_sql += 'commit;"'
+    trans_sql += 'commit; checkpoint;"'
     os.system(trans_sql)
     # Delete all files
     iteration = 0
