@@ -5,10 +5,15 @@
 # This is tested to work on Linux, assumes that psql is in $PATH, and that
 # gensort is in CWD.  It may well use non-portable shell conventions.
 #
-# Line number is striped from original file before COPY processing .  This may
-# imply that we end up with something that does not exactly match the
-# requirements of the Daytona category benchmark, but perfect compliance with
-# the rules of the benchmark isn't really a goal of this tool.
+# The middle column, and ordinal number, is striped from original file before
+# COPY processing.  This may imply that we end up with something that does not
+# exactly match the requirements of the Daytona category benchmark, but perfect
+# compliance with the rules of the benchmark isn't really a goal of this tool.
+# Besides, the requirement to produce files that are identical in format to the
+# original (but in sorted order) is probably motivated only by verifiability
+# for adjudicating the sort benchmark competition; users of this tool are
+# unlikely to write the finished, fully sorted table contents once the sort is
+# over either.
 #
 # Table may be "skewed", which is useful for simulating a scenario where text
 # abbreviated keys are less effective but still help somewhat.
@@ -19,10 +24,12 @@ import threading
 
 # Each gensort_worker processes 10 million tuples per iteration:
 tuples_per_iteration = int(float('1e7'))
+# tmp directory for x files:
+tmpdir = "/tmp"
 
 
 def gensort_worker(worker_num, iteration, skew):
-    filename = "/tmp/it_%s" % iteration
+    filename = "%s/it_%s" % (tmpdir, iteration)
     print 'worker %s generating file %s' % (worker_num, filename)
     os.system("./gensort -a " + ("-s " if skew else "") +
               # -b is starting point...
@@ -75,7 +82,7 @@ def main(nthreads, skew, logged, ntuples):
     # ensure perfect determinism.
     iteration = 0
     while iteration < iterations:
-        filename = "/tmp/it_%s.copy" % iteration
+        filename = "%s/it_%s.copy" % (tmpdir, iteration)
         os.system('psql -c "copy ' + tablename + ' from \'' + filename + '\' "')
         os.system("rm " + filename)
         iteration += 1
