@@ -81,17 +81,17 @@ def main(nthreads, skew, logged, ntuples):
         iteration += 1
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-w", "--workers", type=int,
                         help="Number of gensort workers", default=4)
+    parser.add_argument("-m", "--million", type=int,
+                        help="Generate n million tuples", default=100)
     parser.add_argument("-s", "--skew", action="store_true",
                         help="Skew distribution of output keys")
     parser.add_argument("-l", "--logged", action="store_true",
                         help="Use logged PostgreSQL table")
-    parser.add_argument("-b", "--billion", action="store_true",
-                        help="Generate 1 billion tuples")
     args = parser.parse_args()
-    # ntuples (100 million is current default)
-    ntuples = int(float('1e9')) if args.billion else int(float('1e8'))
 
+    ntuples = args.million * 1000000
     main(args.workers, args.skew, args.logged, ntuples)

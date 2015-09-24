@@ -55,6 +55,9 @@ Run Python tool:
 ./postgres_load.py
 
 Note that the number of worker threads is configurable (see --help).  The tool
-currently always uses "Daytona Sort" style ascii keys.  It may also create a
-table with a skew, to moderately decrease the effectiveness of abbreviated
-keys.
+currently always uses "Daytona Sort" style ascii keys.
+
+The wrapper script supports creating a table with skew, to moderately decrease
+the effectiveness of abbreviated keys.  By default, 100 million tuples are
+created.  Currently, the size of the resulting PostgreSQL table is 6512 MB with
+that default.
