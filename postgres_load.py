@@ -17,7 +17,9 @@
 # requirement).
 #
 # Table may be "skewed", which is useful for simulating a scenario where text
-# abbreviated keys are less effective but still help somewhat.
+# abbreviated keys are less effective but still help somewhat.  This does not
+# make much of a difference, because there is still plenty of entropy
+# concentrated in the final 8 bytes (on 64-bit systems with 8 byte Datums).
 
 import argparse
 import os
@@ -58,7 +60,7 @@ def main(nthreads, skew, logged, ntuples):
 
     table = 'sort_test' if not skew else 'sort_test_skew'
     assert ntuples % tuples_per_iteration == 0, """ntuples (%s) is not
-    evenly divisable by tuples_per_iteration
+    evenly divisible by tuples_per_iteration
     (%s)""" % (ntuples, tuples_per_iteration)
     iterations = ntuples / tuples_per_iteration
     iteration = 0
