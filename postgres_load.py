@@ -57,7 +57,9 @@ def gensort_worker(worker_num, iteration, skew):
 def main(nthreads, skew, logged, ntuples):
 
     table = 'sort_test' if not skew else 'sort_test_skew'
-    assert(ntuples % tuples_per_iteration == 0)
+    assert ntuples % tuples_per_iteration == 0, """ntuples (%s) is not
+    evenly divisable by tuples_per_iteration
+    (%s)""" % (ntuples, tuples_per_iteration)
     iterations = ntuples / tuples_per_iteration
     iteration = 0
     while iteration < iterations:
@@ -75,7 +77,10 @@ def main(nthreads, skew, logged, ntuples):
         for t in threads:
             t.join()
 
-    trans_sql = 'psql -c "begin; drop table if exists ' + table + '; create ' + ('unlogged ' if not logged else '') + 'table ' + table + '(sortkey text, payload bytea);\n'
+    trans_sql = 'psql -c "begin; drop table if exists ' + table + ';\n'
+    trans_sql += """create %s table
+    %s(sortkey text,
+       payload bytea);\n""" % (('' if logged else 'unlogged'), table)
     # Do not parallelize COPY.  Treat the ordering among runs as special, to
     # ensure perfect determinism.
     iteration = 0
