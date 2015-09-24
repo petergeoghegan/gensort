@@ -1,19 +1,20 @@
 #!/usr/bin/env python
 #
-# Tool for bulk loading gensort "Daytona Sort" category data into PostgreSQL.
+# Tool for bulk loading gensort/sortbenchmark.org ascii tuples into PostgreSQL.
 #
 # This is tested to work on Linux, assumes that psql is in $PATH, and that
 # gensort is in CWD.  It may well use non-portable shell conventions.
 #
 # The middle column, and ordinal number, is striped from original file before
 # COPY processing.  This may imply that we end up with something that does not
-# exactly match the requirements of the Daytona category benchmark, but perfect
-# compliance with the rules of the benchmark isn't really a goal of this tool.
-# Besides, the requirement to produce files that are identical in format to the
-# original (but in sorted order) is probably motivated only by verifiability
-# for adjudicating the sort benchmark competition; users of this tool are
-# unlikely to write the finished, fully sorted table contents once the sort is
-# over either.
+# exactly match the requirements of certain "Daytona" category benchmarks (like
+# Daytona Joulesort), but perfect compliance with the rules of the benchmark
+# isn't a goal of this tool.  The requirement to produce files that are
+# identical in format to the original (but in sorted order) is probably
+# motivated only by verifiability for adjudicating the sort benchmark
+# competition; users of this tool are unlikely to write the finished, fully
+# sorted table contents once the sort is over either (which is also a
+# requirement).
 #
 # Table may be "skewed", which is useful for simulating a scenario where text
 # abbreviated keys are less effective but still help somewhat.
