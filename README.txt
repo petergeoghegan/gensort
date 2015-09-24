@@ -61,3 +61,6 @@ The wrapper script supports creating a table with skew, to moderately decrease
 the effectiveness of abbreviated keys.  By default, 100 million tuples are
 created.  Currently, the size of the resulting PostgreSQL table is 6512 MB with
 that default.
+
+Note that all tables are loaded with COPY FREEZE, to maximize inter-run
+determinism for performance testing optimizations to sorting.

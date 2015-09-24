@@ -55,12 +55,8 @@ def gensort_worker(worker_num, iteration, skew):
 
 
 def main(nthreads, skew, logged, ntuples):
-    # Create new table for benchmarking
-    tablename = 'sort_test' if not skew else 'sort_test_skew'
-    os.system('psql -c "drop table if exists ' + tablename + '"')
-    os.system('psql -c "create ' + ('unlogged ' if not logged else '') +
-              'table ' + tablename + '(sortkey text, payload bytea);"')
 
+    table = 'sort_test' if not skew else 'sort_test_skew'
     assert(ntuples % tuples_per_iteration == 0)
     iterations = ntuples / tuples_per_iteration
     iteration = 0
@@ -79,12 +75,21 @@ def main(nthreads, skew, logged, ntuples):
         for t in threads:
             t.join()
 
+    trans_sql = 'psql -c "begin; drop table if exists ' + table + '; create ' + ('unlogged ' if not logged else '') + 'table ' + table + '(sortkey text, payload bytea);\n'
     # Do not parallelize COPY.  Treat the ordering among runs as special, to
     # ensure perfect determinism.
     iteration = 0
     while iteration < iterations:
         filename = "%s/it_%s.copy" % (tmpdir, iteration)
-        os.system('psql -c "copy ' + tablename + ' from \'' + filename + '\' "')
+        trans_sql += "copy " + table + " from '" + filename + "' with freeze;\n"
+        iteration += 1
+
+    trans_sql += 'commit;"'
+    os.system(trans_sql)
+    # Delete all files
+    iteration = 0
+    while iteration < iterations:
+        filename = "%s/it_%s.copy" % (tmpdir, iteration)
         os.system("rm " + filename)
         iteration += 1
 
