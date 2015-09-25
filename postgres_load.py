@@ -2,8 +2,11 @@
 #
 # Tool for bulk loading gensort/sortbenchmark.org ascii tuples into PostgreSQL.
 #
-# This is tested to work on Linux, assumes that psql is in $PATH, and that
-# gensort is in CWD.  It may well use non-portable shell conventions.
+# This is tested to work on Linux only, and assumes that psql is in $PATH, and
+# that gensort is in CWD.  It is also assumed that the files written to TMPDIR
+# are readable by the Postgres OS user (typically because test builds are set
+# up to have the same OS user as the hacker's system account).  This tool may
+# well use non-portable shell conventions.
 #
 # The middle column, and ordinal number, is striped from original file before
 # COPY processing.  This may imply that we end up with something that does not
@@ -26,12 +29,23 @@ import os
 import threading
 
 # Each gensort_worker processes 10 million tuples per iteration:
-tuples_per_iteration = int(float('1e7'))
+tuples_per_iteration = 10 * 1000 * 1000
 # tmp directory for x files:
 tmpdir = "/tmp"
 
 
 def gensort_worker(worker_num, iteration, skew):
+    """ Have worker process one iteration.
+
+    An iteration is a (tuples_per_iteration tuples) slice of the total number
+    of tuples stored in the final PostgreSQL table.  nthread workers are
+    started at a time, with each processing one iteration.
+
+    Keyword arguments:
+        worker_num  -- ordinal identifier of worker thread
+        iteration   -- iteration within sequence (starts from zero)
+        skew        -- should tuple sortkey be "skewed"?
+    """
     filename = "%s/it_%s" % (tmpdir, iteration)
     print 'worker %s generating file %s' % (worker_num, filename)
     os.system("./gensort -a " + ("-s " if skew else "") +
@@ -47,16 +61,27 @@ def gensort_worker(worker_num, iteration, skew):
     bash_escape_slash = slash * 2
     bash_escape_replace = slash * 4
     tab = '\\t'
-    # Used to strip line number, which is not stored
+    # Used to strip line number, which is not stored:
     n_count_chars = '{32}'
+    # Use sed substitution to convert to default PostgreSQL COPY format.  Must
+    # escape \ characters appearing in sortkey, etc.
     os.system("cat " + filename + " | sed 's/" + bash_escape_slash + "/" +
               bash_escape_replace + "/g' | sed -E 's/[[:space:]]+[0-9A-F]" +
               n_count_chars + "[[:space:]][^$]/" + tab + bash_escape_replace +
               "x/g' > " + filename + ".copy")
+    # Now that the same information is available in useful format, rm original:
     os.system("rm " + filename)
 
 
 def main(nthreads, skew, logged, ntuples):
+    """ Main function; starts and coordinates worker threads.
+
+    Keyword arguments:
+        nthreads -- Total number of threads. Typically matches CPU core count.
+        skew     -- should tuple sortkey be "skewed"?
+        skew     -- should PostgreSQL table be logged?
+        ntuples  -- final number of tuples required.
+    """
 
     table = 'sort_test' if not skew else 'sort_test_skew'
     assert ntuples % tuples_per_iteration == 0, """ntuples (%s) is not
@@ -84,8 +109,8 @@ def main(nthreads, skew, logged, ntuples):
     #
     # Do not parallelize COPY.  Apart from being necessary to bulk load within
     # a single transaction, treating the ordering among partitions as special
-    # ensures perfect determinism.  Having a perfectly recreatable test case is
-    # an important goal of this tool.
+    # ensures perfect determinism.  Having a recreatable test case is an
+    # important goal of this tool.
     trans_sql = """psql -c "begin;
     drop table if exists %s;
     create %s table %s
@@ -94,15 +119,16 @@ def main(nthreads, skew, logged, ntuples):
       payload bytea
     );\n""" % (table, '' if logged else 'unlogged', table)
     iteration = 0
+    # Append COPY line to SQL string:
     while iteration < iterations:
-        # Append line to single xact SQL string
         filename = "%s/it_%s.copy" % (tmpdir, iteration)
         trans_sql += "copy " + table + " from '" + filename + "' with freeze;\n"
         iteration += 1
-
     trans_sql += 'commit; checkpoint;"'
+
+    # Actually perform all Postgres-side work:
     os.system(trans_sql)
-    # Delete all files
+    # Finally, delete all COPY-format files:
     iteration = 0
     while iteration < iterations:
         filename = "%s/it_%s.copy" % (tmpdir, iteration)
@@ -122,5 +148,5 @@ if __name__ == "__main__":
                         help="Use logged PostgreSQL table")
     args = parser.parse_args()
 
-    ntuples = args.million * 1000000
+    ntuples = args.million * 1000 * 1000
     main(args.workers, args.skew, args.logged, ntuples)
