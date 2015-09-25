@@ -8,7 +8,7 @@
 # up to have the same OS user as the hacker's system account).  This tool may
 # well use non-portable shell conventions.
 #
-# The middle column, and ordinal number, is striped from original file before
+# The middle column, an ordinal number, is striped from original file before
 # COPY processing.  This may imply that we end up with something that does not
 # exactly match the requirements of certain "Daytona" category benchmarks (like
 # Daytona Joulesort), but perfect compliance with the rules of the benchmark
