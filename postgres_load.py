@@ -73,11 +73,11 @@ def gensort_worker(worker_num, iteration, skew):
     os.system("rm " + filename)
 
 
-def main(nthreads, skew, logged, ntuples):
+def main(workers, skew, logged, ntuples):
     """ Main function; starts and coordinates worker threads, performs COPY.
 
     Keyword arguments:
-        nthreads -- Total number of threads. Typically matches CPU core count.
+        workers --  Total number of workers. Typically matches CPU core count.
         skew     -- should tuple sortkey be "skewed"?
         logged   -- should PostgreSQL table be logged?
         ntuples  -- final number of tuples required.
@@ -90,7 +90,7 @@ def main(nthreads, skew, logged, ntuples):
     iteration = 0
     while iteration < iterations:
         threads = []
-        for i in range(nthreads):
+        for i in range(workers):
             t = threading.Thread(target=gensort_worker,
                                  args=(i, iteration, skew, ))
             threads.append(t)
@@ -98,7 +98,6 @@ def main(nthreads, skew, logged, ntuples):
             iteration += 1
             if iteration == iterations:
                 break
-
         # Wait for all worker threads to finish processing:
         for t in threads:
             t.join()
@@ -118,25 +117,19 @@ def main(nthreads, skew, logged, ntuples):
       sortkey text,
       payload bytea
     );\n""" % (table, '' if logged else 'unlogged', table)
-    iteration = 0
     # Append COPY line to SQL string:
-    while iteration < iterations:
+    for iteration in range(iterations):
         filename = "%s/it_%s.copy" % (tmpdir, iteration)
         trans_sql += "copy " + table + " from '" + filename + "' with freeze;\n"
-        iteration += 1
     trans_sql += 'commit; checkpoint;"'
 
-    # Actually perform all Postgres-side work:
     print 'performing serial COPY of generated files'
     os.system(trans_sql)
 
-    # Finally, delete all COPY-format files:
-    iteration = 0
     print 'deleting generated COPY format files'
-    while iteration < iterations:
+    for iteration in range(iterations):
         filename = "%s/it_%s.copy" % (tmpdir, iteration)
         os.system("rm " + filename)
-        iteration += 1
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
