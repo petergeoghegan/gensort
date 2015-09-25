@@ -79,7 +79,7 @@ def main(nthreads, skew, logged, ntuples):
     Keyword arguments:
         nthreads -- Total number of threads. Typically matches CPU core count.
         skew     -- should tuple sortkey be "skewed"?
-        skew     -- should PostgreSQL table be logged?
+        logged   -- should PostgreSQL table be logged?
         ntuples  -- final number of tuples required.
     """
 
