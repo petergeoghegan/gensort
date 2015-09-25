@@ -79,14 +79,23 @@ def main(nthreads, skew, logged, ntuples):
         for t in threads:
             t.join()
 
-    trans_sql = 'psql -c "begin; drop table if exists ' + table + ';\n'
-    trans_sql += """create %s table
-    %s(sortkey text,
-       payload bytea);\n""" % (('' if logged else 'unlogged'), table)
-    # Do not parallelize COPY.  Treat the ordering among runs as special, to
-    # ensure perfect determinism.
+    # Do all work within single transaction, including creating new table.
+    # This allows all bulk loading to use COPY FREEZE.
+    #
+    # Do not parallelize COPY.  Apart from being necessary to bulk load within
+    # a single transaction, treating the ordering among partitions as special
+    # ensures perfect determinism.  Having a perfectly recreatable test case is
+    # an important goal of this tool.
+    trans_sql = """psql -c "begin;
+    drop table if exists %s;
+    create %s table %s
+    (
+      sortkey text,
+      payload bytea
+    );\n""" % (table, '' if logged else 'unlogged', table)
     iteration = 0
     while iteration < iterations:
+        # Append line to single xact SQL string
         filename = "%s/it_%s.copy" % (tmpdir, iteration)
         trans_sql += "copy " + table + " from '" + filename + "' with freeze;\n"
         iteration += 1
