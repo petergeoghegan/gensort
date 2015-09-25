@@ -53,9 +53,9 @@ def gensort_worker(worker_num, iteration, skew):
               "-b" + str(iteration * tuples_per_iteration) + " " +
               # ...always want this many tuples per worker iteration
               str(tuples_per_iteration) + " " + filename)
+
     print 'worker %s converting file %s to %s.copy' % (worker_num, filename,
                                                        filename)
-
     # Constants to make string interpolation to bash convenient:
     slash = '\\'
     bash_escape_slash = slash * 2
