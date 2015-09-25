@@ -90,9 +90,9 @@ def main(workers, skew, logged, ntuples):
     iterations = ntuples / tuples_per_iteration
     while iteration < iterations:
         threads = []
-        for i in range(1, workers + 1):
+        for worker_num in range(1, workers + 1):
             t = threading.Thread(target=gensort_worker,
-                                 args=(i, iteration, skew, ))
+                                 args=(worker_num, iteration, skew, ))
             threads.append(t)
             t.start()
             iteration += 1
