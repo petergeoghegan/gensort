@@ -29,7 +29,7 @@ import os
 import threading
 
 # Each gensort_worker processes 10 million tuples per iteration:
-tuples_per_iteration = 10 * 1000 * 1000
+tuples_per_iteration = 10L * 1000L * 1000L
 # tmp directory for x files:
 tmpdir = "/tmp"
 
@@ -138,9 +138,9 @@ def main(nthreads, skew, logged, ntuples):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-w", "--workers", type=int,
+    parser.add_argument("-w", "--workers", type=long,
                         help="Number of gensort workers", default=4)
-    parser.add_argument("-m", "--million", type=int,
+    parser.add_argument("-m", "--million", type=long,
                         help="Generate n million tuples", default=100)
     parser.add_argument("-s", "--skew", action="store_true",
                         help="Skew distribution of output keys")
@@ -148,5 +148,5 @@ if __name__ == "__main__":
                         help="Use logged PostgreSQL table")
     args = parser.parse_args()
 
-    ntuples = args.million * 1000 * 1000
+    ntuples = args.million * 1000L * 1000L
     main(args.workers, args.skew, args.logged, ntuples)
