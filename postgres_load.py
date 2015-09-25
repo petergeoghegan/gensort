@@ -127,9 +127,11 @@ def main(nthreads, skew, logged, ntuples):
     trans_sql += 'commit; checkpoint;"'
 
     # Actually perform all Postgres-side work:
+    print 'performing serial COPY of generated files'
     os.system(trans_sql)
     # Finally, delete all COPY-format files:
     iteration = 0
+    print 'deleting generated COPY format files'
     while iteration < iterations:
         filename = "%s/it_%s.copy" % (tmpdir, iteration)
         os.system("rm " + filename)
