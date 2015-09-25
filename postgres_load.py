@@ -30,7 +30,7 @@ import threading
 
 # Each gensort_worker processes 10 million tuples per iteration:
 tuples_per_iteration = 10L * 1000L * 1000L
-# tmp directory for x files:
+# tmp directory for gensort/COPY temp files:
 tmpdir = "/tmp"
 
 
@@ -86,11 +86,11 @@ def main(workers, skew, logged, ntuples):
     evenly divisible by tuples_per_iteration
     (%s)""" % (ntuples, tuples_per_iteration)
 
-    iterations = ntuples / tuples_per_iteration
     iteration = 0
+    iterations = ntuples / tuples_per_iteration
     while iteration < iterations:
         threads = []
-        for i in range(workers):
+        for i in range(1, workers + 1):
             t = threading.Thread(target=gensort_worker,
                                  args=(i, iteration, skew, ))
             threads.append(t)
