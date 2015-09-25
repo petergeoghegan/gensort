@@ -53,8 +53,8 @@ def gensort_worker(worker_num, iteration, skew):
               "-b" + str(iteration * tuples_per_iteration) + " " +
               # ...always want this many tuples per worker iteration
               str(tuples_per_iteration) + " " + filename)
-    print 'worker %s converting file %s to COPY format' % (worker_num,
-                                                           filename)
+    print 'worker %s converting file %s to %s.copy' % (worker_num, filename,
+                                                       filename)
 
     # Constants to make string interpolation to bash convenient:
     slash = '\\'
@@ -69,7 +69,7 @@ def gensort_worker(worker_num, iteration, skew):
               bash_escape_replace + "/g' | sed -E 's/[[:space:]]+[0-9A-F]" +
               n_count_chars + "[[:space:]][^$]/" + tab + bash_escape_replace +
               "x/g' > " + filename + ".copy")
-    # Now that the same information is available in useful format, rm original:
+    print 'worker %s deleting original file %s' % (worker_num, filename)
     os.system("rm " + filename)
 
 
