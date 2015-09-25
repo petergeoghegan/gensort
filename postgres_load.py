@@ -74,7 +74,7 @@ def gensort_worker(worker_num, iteration, skew):
 
 
 def main(nthreads, skew, logged, ntuples):
-    """ Main function; starts and coordinates worker threads.
+    """ Main function; starts and coordinates worker threads, performs COPY.
 
     Keyword arguments:
         nthreads -- Total number of threads. Typically matches CPU core count.
@@ -82,11 +82,10 @@ def main(nthreads, skew, logged, ntuples):
         logged   -- should PostgreSQL table be logged?
         ntuples  -- final number of tuples required.
     """
-
-    table = 'sort_test' if not skew else 'sort_test_skew'
     assert ntuples % tuples_per_iteration == 0, """ntuples (%s) is not
     evenly divisible by tuples_per_iteration
     (%s)""" % (ntuples, tuples_per_iteration)
+
     iterations = ntuples / tuples_per_iteration
     iteration = 0
     while iteration < iterations:
@@ -111,6 +110,7 @@ def main(nthreads, skew, logged, ntuples):
     # a single transaction, treating the ordering among partitions as special
     # ensures perfect determinism.  Having a recreatable test case is an
     # important goal of this tool.
+    table = 'sort_test' if not skew else 'sort_test_skew'
     trans_sql = """psql -c "begin;
     drop table if exists %s;
     create %s table %s
@@ -129,6 +129,7 @@ def main(nthreads, skew, logged, ntuples):
     # Actually perform all Postgres-side work:
     print 'performing serial COPY of generated files'
     os.system(trans_sql)
+
     # Finally, delete all COPY-format files:
     iteration = 0
     print 'deleting generated COPY format files'
