@@ -15,9 +15,9 @@
 # isn't a goal of this tool.  The requirement to produce files that are
 # identical in format to the original (but in sorted order) is probably
 # motivated only by verifiability for adjudicating the sort benchmark
-# competition; users of this tool are unlikely to write the finished, fully
-# sorted table contents once the sort is over either (which is also a
-# requirement).
+# competition; users of this tool are also unlikely to write out the finished,
+# fully sorted table contents in the original format once the sort is over
+# (which is also a requirement).
 #
 # Table may be "skewed", which is useful for simulating a scenario where text
 # abbreviated keys are less effective but still help somewhat.  This does not
