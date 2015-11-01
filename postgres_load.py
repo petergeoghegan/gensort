@@ -73,13 +73,14 @@ def gensort_worker(worker_num, iteration, skew):
     os.system("rm " + filename)
 
 
-def main(workers, skew, logged, ntuples):
+def main(workers, skew, logged, collate, ntuples):
     """ Main function; starts and coordinates worker threads, performs COPY.
 
     Keyword arguments:
         workers --  Total number of workers. Typically matches CPU core count.
         skew     -- should tuple sortkey be "skewed"?
         logged   -- should PostgreSQL table be logged?
+        collate  -- sortkey column should use default collation?
         ntuples  -- final number of tuples required.
     """
     assert ntuples % tuples_per_iteration == 0, """ntuples (%s) is not
@@ -114,9 +115,13 @@ def main(workers, skew, logged, ntuples):
     drop table if exists %s;
     create %s table %s
     (
-      sortkey text,
+      sortkey text %s,
       payload bytea
-    );\n""" % (table, '' if logged else 'unlogged', table)
+    );\n""" % (
+        table,
+        '' if logged else 'unlogged',
+        table,
+        '' if collate else r'collate \"C\"')
     # Append COPY line to SQL string:
     for iteration in range(iterations):
         filename = "%s/it_%s.copy" % (tmpdir, iteration)
@@ -142,7 +147,9 @@ if __name__ == "__main__":
                         help="Skew distribution of output keys")
     parser.add_argument("-l", "--logged", action="store_true",
                         help="Use logged PostgreSQL table")
+    parser.add_argument("-c", "--collate", action="store_true",
+                        help="Use default collation rather than C collation")
     args = parser.parse_args()
 
     ntuples = args.million * 1000L * 1000L
-    main(args.workers, args.skew, args.logged, ntuples)
+    main(args.workers, args.skew, args.logged, args.collate, ntuples)
