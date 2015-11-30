@@ -77,7 +77,7 @@ def main(workers, skew, logged, collate, ntuples):
     """ Main function; starts and coordinates worker threads, performs COPY.
 
     Keyword arguments:
-        workers  --  Total number of workers. Typically matches CPU core count.
+        workers  -- Total number of workers. Typically matches CPU core count.
         skew     -- should tuple sortkey be "skewed"?
         logged   -- should PostgreSQL table be logged?
         collate  -- sortkey column should use default collation?
